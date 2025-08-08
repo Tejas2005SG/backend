@@ -4,11 +4,12 @@ services:
     runtime: python
     pythonVersion: "3.13"
     buildCommand: |
-      pip install .
+      ./setup.sh                      
       npm install
       npx prisma generate
       prisma py fetch
       npx prisma migrate deploy
+      pip install .
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PORT
