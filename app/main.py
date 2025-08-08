@@ -25,19 +25,23 @@ class HackrxResponse(BaseModel):
 @app.on_event("startup")
 async def startup_event():
     global VECTOR_STORE
-    await prisma.connect()
     try:
-        # Construct a robust absolute path to the PDF file
-        # This navigates to the parent directory of 'app', then into the 'datasets' folder
+        # ✅ Fetch Prisma binaries before connecting (required for Render)
+        await prisma.fetch()
+
+        # ✅ Connect to database
+        await prisma.connect()
+
+        # ✅ Construct absolute path to the PDF file
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         pdf_path = os.path.join(base_dir, "datasets", "Arogya_Sanjeevani_Policy.pdf")
-        
+
+        # ✅ Set up vector store (run sync code in thread)
         VECTOR_STORE = await asyncio.to_thread(setup_vector_store, pdf_path)
+
     except Exception as e:
         logger.error(f"Failed to set up vector store: {e}")
-        # If the setup fails, the application can't function correctly, so we should raise the exception.
         raise RuntimeError(f"Application failed to start due to RAG setup error: {e}")
-
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -59,7 +63,7 @@ async def hackrx_run(data: HackrxRequest, request: Request):
             None, 
             lambda: process_pdf_and_answer(VECTOR_STORE, data.questions)
         )
-        
+
         # Save to DB
         for q, a in zip(data.questions, answers):
             await prisma.querylog.create(
@@ -69,9 +73,9 @@ async def hackrx_run(data: HackrxRequest, request: Request):
                     "answer": a
                 }
             )
-            
+
         return {"answers": answers}
-        
+
     except Exception as e:
         logger.error(f"Error processing request: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
