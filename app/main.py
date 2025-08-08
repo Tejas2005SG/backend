@@ -26,9 +26,6 @@ class HackrxResponse(BaseModel):
 async def startup_event():
     global VECTOR_STORE
     try:
-        # ✅ Fetch Prisma binaries before connecting (required for Render)
-        await prisma.fetch()
-
         # ✅ Connect to database
         await prisma.connect()
 
