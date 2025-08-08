@@ -3,18 +3,13 @@ services:
     name: hackerex-backend
     runtime: python
     pythonVersion: "3.13"
-    buildCommand: pip install .
+    buildCommand: |
+      pip install .
+      npm install
+      npx prisma generate
+      npx prisma migrate deploy
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PORT
         value: 8000
-      - key: GEMINI_API_KEY
-        value: AIzaSyDyujm50dHMYvn1V50dDDqcAhgUqCOuUGU
-      - key: PINECONE_API_KEY
-        value: pcsk_6p4RaS_9gDP6jJLJ2jnR1iaNw2fwMQqCyn2siu5LWz4LAu9NQbnVWtmWFLNNKHw9yiynsZ
-      - key: PINECONE_ENV
-        value: us-east-1
-      - key: PINECONE_INDEX
-        value: my-chatbot-index
-      - key: DATABASE_URL
-        value: postgres://9880098cd3cd5d91c79fe29ac66ae064606babe910c697f47d872e1b4b0ba564:sk_4nzknGIVQlS-xVNBDoW9A@db.prisma.io:5432/?sslmode=require
+      - fromDotEnv: true
